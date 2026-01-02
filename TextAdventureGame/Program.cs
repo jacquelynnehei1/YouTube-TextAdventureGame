@@ -17,6 +17,8 @@
 
             Location currentLocation = Location.Camp;
 
+            string[] inventory = new string[10];
+
             Console.WriteLine("Hello, adventurer!");
 
             Console.WriteLine("What is your name?");
@@ -43,8 +45,6 @@
                     {
                         currentLocation = Location.Cave;
                         Console.WriteLine("You bravely step into the darkness and trip on a rock, losing 2 health.");
-                        Console.WriteLine("You find 10 gold coins!");
-                        gold = gold + 10;
                         health = health - 2;
                     }
                     else if (currentLocation == Location.Cave)
@@ -63,6 +63,72 @@
                     else if (currentLocation == Location.Cave)
                     {
                         Console.WriteLine("You decide to stay in the cave. It's quite dark.");   
+                    }
+                }
+                else if (choice == "inventory")
+                {
+                    for (int i = 0; i < inventory.Length; i++)
+                    {
+                        if (inventory[i] == null)
+                        {
+                            Console.WriteLine($"[{i}] EMPTY");   
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[{i}] {inventory[i]}");
+                        }
+                    }
+                }
+                else if (choice == "search")
+                {
+                    if (currentLocation == Location.Cave)
+                    {
+                        bool hasEmptySlot = false;
+
+                        for (int i = 0; i < inventory.Length; i++)
+                        {
+                            if (inventory[i] == null)
+                            {
+                                Console.WriteLine("You search the cave and find a rusty key. You put it in your pack.");
+                                inventory[i] = "rusty key";
+                                hasEmptySlot = true;
+                                break;
+                            }
+                        }
+
+                        if (hasEmptySlot == false)
+                        {
+                            Console.WriteLine("You search the cave and find a rusty key but your inventory is too full to pick it up.");
+                        }
+
+                        Console.WriteLine("You also find 10 gold coins!");
+                        gold = gold + 10;
+                        
+                    }
+                    else
+                    {
+                        Console.WriteLine("You search but find nothing.");
+                    }
+                }
+                else if (choice.StartsWith("drop "))
+                {
+                    string itemName = choice.Substring(5);
+                    bool foundItem = false;
+
+                    for (int i = 0; i < inventory.Length; i++)
+                    {
+                        if (inventory[i] == itemName)
+                        {
+                            Console.WriteLine($"You drop the {itemName}.");
+                            inventory[i] = null;
+                            foundItem = true;
+                            break;
+                        }
+                    }
+
+                    if (foundItem == false)
+                    {
+                        Console.WriteLine($"You don't have a {itemName}.");
                     }
                 }
                 else if (choice == "stats")
