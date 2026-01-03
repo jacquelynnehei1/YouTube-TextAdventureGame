@@ -8,6 +8,48 @@
             Cave
         }
 
+        static void DisplayInventory(string[] inventory)
+        {
+            for (int i = 0; i < inventory.Length; i++)
+            {
+                if (inventory[i] == null)
+                {
+                    Console.WriteLine($"[{i}] EMPTY");   
+                }
+                else
+                {
+                    Console.WriteLine($"[{i}] {inventory[i]}");
+                }
+            }
+        }
+
+        static bool RemoveItem(string[] inventory, string itemName)
+        {
+            for (int i = 0; i < inventory.Length; i++)
+            {
+                if (inventory[i] == itemName)
+                {
+                    inventory[i] = null;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        static int FindEmptySlot(string[] inventory)
+        {
+            for (int i = 0; i < inventory.Length; i++)
+            {
+                if (inventory[i] == null)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
         static void Main(string[] args)
         {
             bool isPlaying = true;
@@ -67,43 +109,26 @@
                 }
                 else if (choice == "inventory")
                 {
-                    for (int i = 0; i < inventory.Length; i++)
-                    {
-                        if (inventory[i] == null)
-                        {
-                            Console.WriteLine($"[{i}] EMPTY");   
-                        }
-                        else
-                        {
-                            Console.WriteLine($"[{i}] {inventory[i]}");
-                        }
-                    }
+                    DisplayInventory(inventory);
                 }
                 else if (choice == "search")
                 {
                     if (currentLocation == Location.Cave)
                     {
-                        bool hasEmptySlot = false;
+                        int emptySlot = FindEmptySlot(inventory);
 
-                        for (int i = 0; i < inventory.Length; i++)
+                        if (emptySlot >= 0)
                         {
-                            if (inventory[i] == null)
-                            {
-                                Console.WriteLine("You search the cave and find a rusty key. You put it in your pack.");
-                                inventory[i] = "rusty key";
-                                hasEmptySlot = true;
-                                break;
-                            }
+                            Console.WriteLine("You search the cave and find a rusty key. You put it in your pack.");
+                            inventory[emptySlot] = "rusty key";
                         }
-
-                        if (hasEmptySlot == false)
+                        else
                         {
                             Console.WriteLine("You search the cave and find a rusty key but your inventory is too full to pick it up.");
                         }
 
                         Console.WriteLine("You also find 10 gold coins!");
                         gold = gold + 10;
-                        
                     }
                     else
                     {
@@ -113,20 +138,13 @@
                 else if (choice.StartsWith("drop "))
                 {
                     string itemName = choice.Substring(5);
-                    bool foundItem = false;
+                    bool isRemoved = RemoveItem(inventory, itemName);
 
-                    for (int i = 0; i < inventory.Length; i++)
+                    if (isRemoved == true)
                     {
-                        if (inventory[i] == itemName)
-                        {
-                            Console.WriteLine($"You drop the {itemName}.");
-                            inventory[i] = null;
-                            foundItem = true;
-                            break;
-                        }
+                        Console.WriteLine($"You drop the {itemName}.");
                     }
-
-                    if (foundItem == false)
+                    else
                     {
                         Console.WriteLine($"You don't have a {itemName}.");
                     }
