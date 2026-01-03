@@ -2,12 +2,6 @@
 {
     internal class Program
     {
-        enum Location
-        {
-            Camp,
-            Cave
-        }
-
         static void DisplayInventory(string[] inventory)
         {
             for (int i = 0; i < inventory.Length; i++)
@@ -54,12 +48,7 @@
         {
             bool isPlaying = true;
 
-            int health = 10;
-            int gold = 0;
-
-            Location currentLocation = Location.Camp;
-
-            string[] inventory = new string[10];
+            Player player = new Player(10, 0, Location.Camp);
 
             Console.WriteLine("Hello, adventurer!");
 
@@ -70,11 +59,11 @@
 
             while (isPlaying == true)
             {
-                if (currentLocation == Location.Camp)
+                if (player.CurrentLocation == Location.Camp)
                 {
                     Console.WriteLine("You are at the campfire. Enter the cave? (yes/no/stats/quit)");    
                 }
-                else if (currentLocation == Location.Cave)
+                else if (player.CurrentLocation == Location.Cave)
                 {
                     Console.WriteLine("You are in a dark cave. Go back to camp? (yes/no/stats/quit)");
                 }
@@ -83,44 +72,44 @@
 
                 if (choice == "yes")
                 {
-                    if (currentLocation == Location.Camp)
+                    if (player.CurrentLocation == Location.Camp)
                     {
-                        currentLocation = Location.Cave;
+                        player.CurrentLocation = Location.Cave;
                         Console.WriteLine("You bravely step into the darkness and trip on a rock, losing 2 health.");
-                        health = health - 2;
+                        player.TakeDamage(2);
                     }
-                    else if (currentLocation == Location.Cave)
+                    else if (player.CurrentLocation == Location.Cave)
                     {
-                        currentLocation = Location.Camp;
+                        player.CurrentLocation = Location.Camp;
                         Console.WriteLine("The cave is dark and scary. You head back to camp to warm by the fire.");
                     }
                     
                 }
                 else if (choice == "no")
                 {
-                    if (currentLocation == Location.Camp)
+                    if (player.CurrentLocation == Location.Camp)
                     {
                         Console.WriteLine("You decide to stay at camp. Probably safer.");
                     }
-                    else if (currentLocation == Location.Cave)
+                    else if (player.CurrentLocation == Location.Cave)
                     {
                         Console.WriteLine("You decide to stay in the cave. It's quite dark.");   
                     }
                 }
                 else if (choice == "inventory")
                 {
-                    DisplayInventory(inventory);
+                    DisplayInventory(player.Inventory);
                 }
                 else if (choice == "search")
                 {
-                    if (currentLocation == Location.Cave)
+                    if (player.CurrentLocation == Location.Cave)
                     {
-                        int emptySlot = FindEmptySlot(inventory);
+                        int emptySlot = FindEmptySlot(player.Inventory);
 
                         if (emptySlot >= 0)
                         {
                             Console.WriteLine("You search the cave and find a rusty key. You put it in your pack.");
-                            inventory[emptySlot] = "rusty key";
+                            player.Inventory[emptySlot] = "rusty key";
                         }
                         else
                         {
@@ -128,7 +117,7 @@
                         }
 
                         Console.WriteLine("You also find 10 gold coins!");
-                        gold = gold + 10;
+                        player.AddGold(10);
                     }
                     else
                     {
@@ -138,7 +127,7 @@
                 else if (choice.StartsWith("drop "))
                 {
                     string itemName = choice.Substring(5);
-                    bool isRemoved = RemoveItem(inventory, itemName);
+                    bool isRemoved = RemoveItem(player.Inventory, itemName);
 
                     if (isRemoved == true)
                     {
@@ -151,9 +140,9 @@
                 }
                 else if (choice == "stats")
                 {
-                    Console.WriteLine($"Health: {health}");
-                    Console.WriteLine($"Gold: {gold}");
-                    Console.WriteLine($"Location: {currentLocation}");
+                    Console.WriteLine($"Health: {player.Health}");
+                    Console.WriteLine($"Gold: {player.Gold}");
+                    Console.WriteLine($"Location: {player.CurrentLocation}");
                 }
                 else if (choice == "quit")
                 {
@@ -165,7 +154,7 @@
                     Console.WriteLine("I don't understand that.");
                 }
 
-                if (health <= 0)
+                if (player.Health <= 0)
                 {
                     Console.WriteLine("You collapse from exhaustion. Game over.");
                     isPlaying = false;
