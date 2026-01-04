@@ -48,7 +48,15 @@
         {
             bool isPlaying = true;
 
-            Player player = new Player(10, 0, Location.Camp);
+            Room camp = new Room("Camp", "A warm fire crackles nearby. You feel safe here.");
+            Room cave = new Room("Cave", "A dark, echoing space. Water drips from the ceiling.");
+
+            cave.Items.Add("rusty key");
+
+            camp.Exit = cave;
+            cave.Exit = camp;
+
+            Player player = new Player(10, 0, camp);
 
             Console.WriteLine("Hello, adventurer!");
 
@@ -59,42 +67,25 @@
 
             while (isPlaying == true)
             {
-                if (player.CurrentLocation == Location.Camp)
-                {
-                    Console.WriteLine("You are at the campfire. Enter the cave? (yes/no/stats/quit)");    
-                }
-                else if (player.CurrentLocation == Location.Cave)
-                {
-                    Console.WriteLine("You are in a dark cave. Go back to camp? (yes/no/stats/quit)");
-                }
+                Console.WriteLine(player.CurrentRoom.Description);
 
                 string choice = Console.ReadLine().ToLower();
 
                 if (choice == "yes")
                 {
-                    if (player.CurrentLocation == Location.Camp)
+                    if (player.CurrentRoom.Exit != null)
                     {
-                        player.CurrentLocation = Location.Cave;
-                        Console.WriteLine("You bravely step into the darkness and trip on a rock, losing 2 health.");
-                        player.TakeDamage(2);
+                        player.CurrentRoom = player.CurrentRoom.Exit;
+                        Console.WriteLine($"You travel to {player.CurrentRoom.Name}");
                     }
-                    else if (player.CurrentLocation == Location.Cave)
+                    else
                     {
-                        player.CurrentLocation = Location.Camp;
-                        Console.WriteLine("The cave is dark and scary. You head back to camp to warm by the fire.");
+                        Console.WriteLine("There's nowhere to go from here.");
                     }
-                    
                 }
                 else if (choice == "no")
                 {
-                    if (player.CurrentLocation == Location.Camp)
-                    {
-                        Console.WriteLine("You decide to stay at camp. Probably safer.");
-                    }
-                    else if (player.CurrentLocation == Location.Cave)
-                    {
-                        Console.WriteLine("You decide to stay in the cave. It's quite dark.");   
-                    }
+                    Console.WriteLine($"You decide to stay in {player.CurrentRoom.Name}");
                 }
                 else if (choice == "inventory")
                 {
@@ -102,26 +93,28 @@
                 }
                 else if (choice == "search")
                 {
-                    if (player.CurrentLocation == Location.Cave)
+                    if (player.CurrentRoom.Items.Count == 0)
                     {
-                        int emptySlot = FindEmptySlot(player.Inventory);
-
-                        if (emptySlot >= 0)
-                        {
-                            Console.WriteLine("You search the cave and find a rusty key. You put it in your pack.");
-                            player.Inventory[emptySlot] = "rusty key";
-                        }
-                        else
-                        {
-                            Console.WriteLine("You search the cave and find a rusty key but your inventory is too full to pick it up.");
-                        }
-
-                        Console.WriteLine("You also find 10 gold coins!");
-                        player.AddGold(10);
+                        Console.WriteLine("You search but find nothing.");
                     }
                     else
                     {
-                        Console.WriteLine("You search but find nothing.");
+                        foreach (string item in player.CurrentRoom.Items)
+                        {
+                            int emptySlot = FindEmptySlot(player.Inventory);
+
+                            if (emptySlot >= 0)
+                            {
+                                Console.WriteLine($"You find a {item} and take it.");
+                                player.Inventory[emptySlot] = item;
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Your backpack is full! You can't take the {item}.");
+                            }
+                        }
+
+                        player.CurrentRoom.Items.Clear();
                     }
                 }
                 else if (choice.StartsWith("drop "))
@@ -132,6 +125,7 @@
                     if (isRemoved == true)
                     {
                         Console.WriteLine($"You drop the {itemName}.");
+                        player.CurrentRoom.Items.Add(itemName);
                     }
                     else
                     {
@@ -142,7 +136,7 @@
                 {
                     Console.WriteLine($"Health: {player.Health}");
                     Console.WriteLine($"Gold: {player.Gold}");
-                    Console.WriteLine($"Location: {player.CurrentLocation}");
+                    Console.WriteLine($"Location: {player.CurrentRoom.Name}");
                 }
                 else if (choice == "quit")
                 {

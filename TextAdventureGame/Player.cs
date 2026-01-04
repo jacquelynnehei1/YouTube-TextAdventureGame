@@ -5,13 +5,13 @@ namespace TextAdventureGame
         public int Health;
         public int Gold;
         public string[] Inventory;
-        public Location CurrentLocation;
+        public Room CurrentRoom;
 
-        public Player(int startingHealth, int startingGold, Location startingLocation)
+        public Player(int startingHealth, int startingGold, Room startingRoom)
         {
             Health = startingHealth;
             Gold = startingGold;
-            CurrentLocation = startingLocation;
+            CurrentRoom = startingRoom;
             Inventory = new string[10];
         }
 
