@@ -7,15 +7,21 @@ namespace TextAdventureGame
         private Room cave;
         private Room forrest;
         private bool isPlaying;
+        private Random random;
 
         public Game()
         {
+            random = new Random();
+
             camp = new Room("Camp", "A warm fire crackles nearby. You feel safe here.");
             cave = new Room("Cave", "A dark, echoing space. Water drips from the ceiling.");
             forrest = new Room("Forrest", "Tall trees surround you. You get the feeling of being watched.");
 
             cave.Items.Add("rusty key");
             forrest.Items.Add("sword");
+
+            cave.Enemy = new Enemy("Goblin", 8, 2);
+            forrest.Enemy = new Enemy("Wolf", 6, 3);
 
             forrest.Exits.Add("south", camp);
             camp.Exits.Add("north", forrest);
@@ -80,7 +86,12 @@ namespace TextAdventureGame
 
             while (isPlaying)
             {
-               move 
+                Console.WriteLine(player.CurrentRoom.Description);
+
+                if (player.CurrentRoom.Enemy != null && player.CurrentRoom.Enemy.Health > 0)
+                {
+                    Console.WriteLine($"A {player.CurrentRoom.Enemy.Name} is here! (Health: {player.CurrentRoom.Enemy.Health})");
+                }
 
                 Console.Write("Exits: ");
                 foreach (KeyValuePair<string, Room> exit in player.CurrentRoom.Exits)
@@ -151,6 +162,40 @@ namespace TextAdventureGame
                         Console.WriteLine($"You don't have a {itemName}.");
                     }
                 }
+                else if (choice == "attack")
+                {
+                    if (player.CurrentRoom.Enemy != null && player.CurrentRoom.Enemy.Health > 0)
+                    {
+                        Enemy enemy = player.CurrentRoom.Enemy;
+
+                        int playerRoll = random.Next(1, 7);
+                        Console.WriteLine($"You attack the {enemy.Name}!");
+                        Console.WriteLine($"You rolled a {playerRoll} and deal {playerRoll} damage.");
+
+                        enemy.Health -= playerRoll;
+
+                        if (enemy.Health <= 0)
+                        {
+                            Console.WriteLine($"You killed the {enemy.Name}! The {enemy.Name} drops 5 gold.");
+                            player.AddGold(5);
+                        }
+                        else
+                        {
+                            int enemyRoll = random.Next(1, 7);
+                            int enemyDamage = enemyRoll + enemy.Attack;
+
+                            Console.WriteLine($"The {enemy.Name} attacks back!");
+                            Console.WriteLine($"It rolled a {enemyRoll} + {enemy.Attack} = {enemyDamage} damage.");
+
+                            player.TakeDamage(enemyDamage);
+                            Console.WriteLine($"You now have {player.Health} health.");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("There's nothing to attack here");
+                    }
+                }
                 else if (choice == "stats")
                 {
                     Console.WriteLine($"Health: {player.Health}");
@@ -161,6 +206,7 @@ namespace TextAdventureGame
                 {
                     Console.WriteLine("\nAvailable commands:");
                     Console.WriteLine("  move [direction] - Move to another room (e.g., 'move north')");
+                    Console.WriteLine("  attack - Attack an enemy in the room");
                     Console.WriteLine("  search - Search the current room for items");
                     Console.WriteLine("  inventory - View your inventory");
                     Console.WriteLine("  drop [item] - Drop an item (e.g., 'drop rusty key')");
