@@ -50,11 +50,15 @@
 
             Room camp = new Room("Camp", "A warm fire crackles nearby. You feel safe here.");
             Room cave = new Room("Cave", "A dark, echoing space. Water drips from the ceiling.");
+            Room forrest = new Room("Forrest", "Tall trees surround you. You get the feeling of being watched.");
 
             cave.Items.Add("rusty key");
+            forrest.Items.Add("sword");
 
-            camp.Exit = cave;
-            cave.Exit = camp;
+            forrest.Exits.Add("south", camp);
+            camp.Exits.Add("north", forrest);
+            camp.Exits.Add("south", cave);
+            cave.Exits.Add("north", camp);
 
             Player player = new Player(10, 0, camp);
 
@@ -69,23 +73,29 @@
             {
                 Console.WriteLine(player.CurrentRoom.Description);
 
+                Console.Write("Exits: ");
+                foreach (KeyValuePair<string, Room> exit in player.CurrentRoom.Exits)
+                {
+                    Console.Write($"{exit.Key} ");
+                }
+
+                Console.WriteLine();
+
                 string choice = Console.ReadLine().ToLower();
 
-                if (choice == "yes")
+                if (choice.StartsWith("move "))
                 {
-                    if (player.CurrentRoom.Exit != null)
+                    string direction = choice.Substring(5);
+
+                    if (player.CurrentRoom.Exits.ContainsKey(direction))
                     {
-                        player.CurrentRoom = player.CurrentRoom.Exit;
-                        Console.WriteLine($"You travel to {player.CurrentRoom.Name}");
+                        player.CurrentRoom = player.CurrentRoom.Exits[direction];
+                        Console.WriteLine($"You travel {direction} to {player.CurrentRoom.Name}.");
                     }
                     else
                     {
-                        Console.WriteLine("There's nowhere to go from here.");
+                        Console.WriteLine($"You can't go {direction} from here.");
                     }
-                }
-                else if (choice == "no")
-                {
-                    Console.WriteLine($"You decide to stay in {player.CurrentRoom.Name}");
                 }
                 else if (choice == "inventory")
                 {
@@ -138,6 +148,17 @@
                     Console.WriteLine($"Gold: {player.Gold}");
                     Console.WriteLine($"Location: {player.CurrentRoom.Name}");
                 }
+                else if (choice == "help")
+                {
+                    Console.WriteLine("\nAvailable commands:");
+                    Console.WriteLine("  move [direction] - Move to another room (e.g., 'move north')");
+                    Console.WriteLine("  search - Search the current room for items");
+                    Console.WriteLine("  inventory - View your inventory");
+                    Console.WriteLine("  drop [item] - Drop an item (e.g., 'drop rusty key')");
+                    Console.WriteLine("  stats - View your health, gold, and location");
+                    Console.WriteLine("  help - Show this help message");
+                    Console.WriteLine("  quit - Exit the game");
+                }
                 else if (choice == "quit")
                 {
                     isPlaying = false;
@@ -145,7 +166,7 @@
                 }
                 else
                 {
-                    Console.WriteLine("I don't understand that.");
+                    Console.WriteLine("I don't understand that. Type 'help' for a list of commands.");
                 }
 
                 if (player.Health <= 0)

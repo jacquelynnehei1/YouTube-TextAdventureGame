@@ -5,7 +5,7 @@ namespace TextAdventureGame
         public string Name;
         public string Description;
         public List<string> Items = new List<string>();
-        public Room Exit;
+        public Dictionary<string, Room> Exits = new Dictionary<string, Room>();
 
         public Room(string name, string description)
         {
