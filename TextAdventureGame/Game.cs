@@ -115,23 +115,23 @@ namespace TextAdventureGame
             while (isPlaying)
             {
                 Console.WriteLine(player.CurrentRoom.Description);
-
-                if (player.CurrentRoom.Enemy != null && player.CurrentRoom.Enemy.Health > 0)
-                {
-                    Console.WriteLine($"A {player.CurrentRoom.Enemy.Name} is here! (Health: {player.CurrentRoom.Enemy.Health})");
-                }
-
-                Console.Write("Exits: ");
-                foreach (KeyValuePair<string, Room> exit in player.CurrentRoom.Exits)
-                {
-                    Console.Write($"{exit.Key} ");
-                }
-
-                Console.WriteLine();
+                Console.WriteLine("What would you like to do?");
 
                 string choice = Console.ReadLine().ToLower().Trim();
 
-                if (choice.StartsWith("move "))
+                if (choice == "look")
+                {
+                    foreach (KeyValuePair<string, Room> exit in player.CurrentRoom.Exits)
+                    {
+                        Console.WriteLine($"You see an exit to the {exit.Key} leading to a {exit.Value.Name}.");    
+                    }
+
+                    if (player.CurrentRoom.Enemy != null)
+                    {
+                        Console.WriteLine($"You also see a {player.CurrentRoom.Enemy.Name}. Prepare for an attack!");
+                    }
+                }
+                else if (choice.StartsWith("move "))
                 {
                     string direction = choice.Substring(5);
 
@@ -304,6 +304,7 @@ namespace TextAdventureGame
                 else if (choice == "help")
                 {
                     Console.WriteLine("\nAvailable commands:");
+                    Console.WriteLine("  look - Look around the room to see where you can move.");
                     Console.WriteLine("  move [direction] - Move to another room (e.g., 'move north')");
                     Console.WriteLine("  attack - Attack an enemy in the room");
                     Console.WriteLine("  use [item] - Use an item (e.g., 'use health potion')");
