@@ -17,6 +17,8 @@ namespace TextAdventureGame
             cave = new Room("Cave", "A dark, echoing space. Water drips from the ceiling.");
             forrest = new Room("Forrest", "Tall trees surround you. You get the feeling of being watched.");
 
+            camp.Items.Add("health potion");
+            camp.Items.Add("shield");
             cave.Items.Add("rusty key");
             forrest.Items.Add("sword");
 
@@ -75,6 +77,32 @@ namespace TextAdventureGame
             return -1;
         }
 
+        private bool HasItem(string[] inventory, string itemName)
+        {
+            for (int i = 0; i < inventory.Length; i++)
+            {
+                if (player.Inventory[i] == itemName)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool AddItem(string[] inventory, string itemName)
+        {
+            int emptySlot = FindEmptySlot(inventory);
+
+            if (emptySlot >= 0)
+            {
+                inventory[emptySlot] = itemName;
+                return true;
+            }
+
+            return false;
+        }
+
         public void Run()
         {
             Console.WriteLine("Hello, adventurer!");
@@ -101,7 +129,7 @@ namespace TextAdventureGame
 
                 Console.WriteLine();
 
-                string choice = Console.ReadLine().ToLower();
+                string choice = Console.ReadLine().ToLower().Trim();
 
                 if (choice.StartsWith("move "))
                 {
@@ -121,6 +149,40 @@ namespace TextAdventureGame
                 {
                     DisplayInventory(player.Inventory);
                 }
+                else if (choice.StartsWith("take "))
+                {
+                    string itemName = choice.Substring(5);
+                    
+                    if (itemName == "all")
+                    {
+                        foreach (string item in player.CurrentRoom.Items)
+                        {
+                            if (AddItem(player.Inventory, item))
+                            {
+                                Console.WriteLine($"You take the {item}.");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"You can't take the {item}. Your backpack is full!");
+                            }
+                        }
+                    }
+                    else if (player.CurrentRoom.Items.Contains(itemName))
+                    {
+                        if (AddItem(player.Inventory, itemName))
+                        {
+                            Console.WriteLine($"You take the {itemName}.");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"You can't take the {itemName}. Your backpack is full!");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"There is no {itemName} to take.");
+                    }
+                }
                 else if (choice == "search")
                 {
                     if (player.CurrentRoom.Items.Count == 0)
@@ -129,22 +191,15 @@ namespace TextAdventureGame
                     }
                     else
                     {
+                        string searchResult = "You find: ";
+
                         foreach (string item in player.CurrentRoom.Items)
                         {
-                            int emptySlot = FindEmptySlot(player.Inventory);
-
-                            if (emptySlot >= 0)
-                            {
-                                Console.WriteLine($"You find a {item} and take it.");
-                                player.Inventory[emptySlot] = item;
-                            }
-                            else
-                            {
-                                Console.WriteLine($"Your backpack is full! You can't take the {item}.");
-                            }
+                            searchResult += $"{item}, ";    
                         }
 
-                        player.CurrentRoom.Items.Clear();
+                        searchResult = searchResult.Substring(0, searchResult.Length - 2);
+                        Console.WriteLine(searchResult);
                     }
                 }
                 else if (choice.StartsWith("drop "))
@@ -169,10 +224,21 @@ namespace TextAdventureGame
                         Enemy enemy = player.CurrentRoom.Enemy;
 
                         int playerRoll = random.Next(1, 7);
-                        Console.WriteLine($"You attack the {enemy.Name}!");
-                        Console.WriteLine($"You rolled a {playerRoll} and deal {playerRoll} damage.");
+                        int attackBonus = 0;
 
-                        enemy.Health -= playerRoll;
+                        if (HasItem(player.Inventory, "sword"))
+                        {
+                            attackBonus += 2;
+                            Console.WriteLine($"You attack the {enemy.Name} with your sword!");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"You attack the {enemy.Name}!");
+                        }
+
+                        Console.WriteLine($"You rolled a {playerRoll} + {attackBonus} = {playerRoll + attackBonus} damage.");
+
+                        enemy.TakeDamage(playerRoll + attackBonus);
 
                         if (enemy.Health <= 0)
                         {
@@ -185,6 +251,19 @@ namespace TextAdventureGame
                             int enemyDamage = enemyRoll + enemy.Attack;
 
                             Console.WriteLine($"The {enemy.Name} attacks back!");
+
+                            if (HasItem(player.Inventory, "shield"))
+                            {
+                                enemyDamage -= 2;
+
+                                if (enemyDamage < 0)
+                                {
+                                    enemyDamage = 0;
+                                }
+
+                                Console.WriteLine("Your shield blocks 2 damage.");
+                            }
+
                             Console.WriteLine($"It rolled a {enemyRoll} + {enemy.Attack} = {enemyDamage} damage.");
 
                             player.TakeDamage(enemyDamage);
@@ -194,6 +273,26 @@ namespace TextAdventureGame
                     else
                     {
                         Console.WriteLine("There's nothing to attack here");
+                    }
+                }
+                else if (choice.StartsWith("use "))
+                {
+                    string itemName = choice.Substring(4);
+
+                    if (HasItem(player.Inventory, itemName) == false)
+                    {
+                        Console.WriteLine($"You don't have a {itemName}.");
+                    }
+                    else if (itemName == "health potion")
+                    {
+                        RemoveItem(player.Inventory, itemName);
+                        player.Heal(5);
+                        Console.WriteLine("You drink the health potion and restore 5 health!");
+                        Console.WriteLine($"You now have {player.Health}/{player.MaxHealth} health.");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"You can't use that {itemName}");
                     }
                 }
                 else if (choice == "stats")
@@ -207,6 +306,7 @@ namespace TextAdventureGame
                     Console.WriteLine("\nAvailable commands:");
                     Console.WriteLine("  move [direction] - Move to another room (e.g., 'move north')");
                     Console.WriteLine("  attack - Attack an enemy in the room");
+                    Console.WriteLine("  use [item] - Use an item (e.g., 'use health potion')");
                     Console.WriteLine("  search - Search the current room for items");
                     Console.WriteLine("  inventory - View your inventory");
                     Console.WriteLine("  drop [item] - Drop an item (e.g., 'drop rusty key')");
@@ -222,6 +322,15 @@ namespace TextAdventureGame
                 else
                 {
                     Console.WriteLine("I don't understand that. Type 'help' for a list of commands.");
+                }
+
+                if (cave.Enemy.Health <= 0 && forrest.Enemy.Health <= 0)
+                {
+                    Console.WriteLine("\n=== VICTORY! ===");
+                    Console.WriteLine("You have defeated all of the enemies!");
+                    Console.WriteLine($"You collected {player.Gold} gold on your journey.");
+                    Console.WriteLine("\nYou are victorious, brave adventurer!");
+                    isPlaying = false;
                 }
 
                 if (player.Health <= 0)

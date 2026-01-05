@@ -12,5 +12,10 @@ namespace TextAdventureGame
             Health = health;
             Attack = attack;
         }
+
+        public void TakeDamage(int amount)
+        {
+            Health -= amount;
+        }
     }
 }
